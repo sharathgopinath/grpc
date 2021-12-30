@@ -1,11 +1,11 @@
 syntax = "proto3";
 
-option csharp_namespace = "Grpc.Client";
+option csharp_namespace = "GrpcDemo.Server";
 
-package greet;
+package grpcdemo;
 
-// The greeting service definition.
-service Greeter {
+// The grpc service definition.
+service GrpcDemo {
   // Sends a greeting
   rpc SayHello (HelloRequest) returns (HelloReply);
 }

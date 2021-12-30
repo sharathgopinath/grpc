@@ -1,16 +1,13 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
 
-namespace Grpc.Server
+namespace GrpcDemo.Server
 {
-    public class GreeterService : Greeter.GreeterBase
+    public class GrpcDemoService : GrpcDemo.GrpcDemoBase
     {
-        private readonly ILogger<GreeterService> _logger;
-        public GreeterService(ILogger<GreeterService> logger)
+        private readonly ILogger<GrpcDemoService> _logger;
+        public GrpcDemoService(ILogger<GrpcDemoService> logger)
         {
             _logger = logger;
         }
