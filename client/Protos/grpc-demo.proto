@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+option csharp_namespace = "GrpcDemo.Client";
+
+package grpcdemo;
+
+// The grpc service definition.
+service GrpcDemo {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply);
+
+  rpc GetTextStream(EmptyParams) returns (stream TextStreamResponse);
+
+  rpc SendTextStream(stream SendTextStreamRequest) returns (SendTextStreamResponse);
+
+  rpc ReverseText(stream ReverseTextRequest) returns (stream ReverseTextResponse);
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings.
+message HelloReply {
+  string message = 1;
+}
+
+message TextStreamResponse {
+  string line = 1;
+}
+
+message SendTextStreamRequest {
+  string line = 1;
+}
+
+message SendTextStreamResponse {
+  float ElapsedTimeSec = 1;
+}
+
+message ReverseTextRequest {
+  string line = 1;
+}
+
+message ReverseTextResponse {
+  string line = 1;
+}
+
+message EmptyParams {}
