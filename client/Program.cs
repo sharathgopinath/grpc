@@ -28,10 +28,14 @@ namespace Grpc.Client
                         await GetTextStream(client);
                         break;
 
+                    case 3:
+                        await SendTextStream(client);
+                        break;
+
                     default: break;
                 };
                 selectedOption = DisplayOptions();
-            } while (selectedOption < 3);
+            } while (selectedOption < 4);
         }
 
         private static int DisplayOptions()
@@ -39,11 +43,35 @@ namespace Grpc.Client
             Console.WriteLine("\r\nSelect an option:");
             Console.WriteLine("1. SayHello");
             Console.WriteLine("2. GetTextStream");
-            Console.WriteLine("3. Exit");
+            Console.WriteLine("3. UpdateTextStream");
+            Console.WriteLine("4. Exit");
 
             var selectedOption = Console.ReadKey().KeyChar;
             Console.WriteLine();
             return int.Parse(selectedOption.ToString());
+        }
+
+        private static async Task SendTextStream(GrpcDemoClient client)
+        {
+            using var call = client.SendTextStream();
+            var lines = new string[] {
+                "Hi there",
+                "What's up?",
+                "How are you?",
+                "The quick brown fox jumps over the lazy dog 1",
+                "The quick brown fox jumps over the lazy dog 2",
+                "The quick brown fox jumps over the lazy dog 3",
+                "The quick brown fox jumps over the lazy dog 4",
+            };
+            foreach (var line in lines)
+            {
+                await call.RequestStream.WriteAsync(new SendTextStreamRequest { Line = line });
+                Console.WriteLine($"Sent: {line}");
+                await Task.Delay(500);
+            }
+            await call.RequestStream.CompleteAsync();
+            var updateResponse = await call.ResponseAsync;
+            Console.WriteLine($"Update completed in {updateResponse.ElapsedTimeSec} seconds");
         }
 
         private static async Task GetTextStream(GrpcDemoClient client)

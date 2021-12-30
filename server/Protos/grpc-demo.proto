@@ -11,7 +11,7 @@ service GrpcDemo {
 
   rpc GetTextStream(EmptyParams) returns (stream TextStreamResponse);
 
-  rpc UpdateTextStream(stream UpdateTextStreamRequest) returns (UpdateTextStreamResponse);
+  rpc SendTextStream(stream SendTextStreamRequest) returns (SendTextStreamResponse);
 
   rpc ReverseText(stream ReverseTextRequest) returns (stream ReverseTextResponse);
 }
@@ -30,12 +30,12 @@ message TextStreamResponse {
   string line = 1;
 }
 
-message UpdateTextStreamRequest {
+message SendTextStreamRequest {
   string line = 1;
 }
 
-message UpdateTextStreamResponse {
-  bool status = 1;
+message SendTextStreamResponse {
+  float ElapsedTimeSec = 1;
 }
 
 message ReverseTextRequest {

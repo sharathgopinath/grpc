@@ -1,4 +1,5 @@
-using System.Threading;
+using System.Diagnostics;
+using System.Linq;
 using System.Threading.Tasks;
 using Grpc.Core;
 using Microsoft.Extensions.Logging;
@@ -11,9 +12,18 @@ namespace GrpcDemo.Server
     public class GrpcDemoService : GrpcDemo.GrpcDemoBase
     {
         private readonly ILogger<GrpcDemoService> _logger;
+        private string[] _lines;
+
         public GrpcDemoService(ILogger<GrpcDemoService> logger)
         {
             _logger = logger;
+            _lines = new string[] {
+                "Sphinx of black quartz, judge my vow",
+                "The early bird catches the worm",
+                "The second mouse gets the cheese",
+                "The first mouse gets the cheese",
+                "The third mouse gets the cheese",
+                "The fourth mouse gets the cheese", };
         }
 
         /// <summary>
@@ -41,21 +51,34 @@ namespace GrpcDemo.Server
             IServerStreamWriter<TextStreamResponse> responseStream,
             ServerCallContext context)
         {
-            var lines = new string[] { 
-                "Sphinx of black quartz, judge my vow",
-                "The early bird catches the worm",
-                "The second mouse gets the cheese",
-                "The first mouse gets the cheese",
-                "The third mouse gets the cheese",
-                "The fourth mouse gets the cheese", };
-
-            foreach (var line in lines)
+            foreach (var line in _lines)
             {
                 await responseStream.WriteAsync(new TextStreamResponse { Line = line });
 
-                // Sleeps for 1 second so that the streaming response is clearly noticeable from the console client
-                Thread.Sleep(1000);
+                // Delay so that the streaming response is clearly noticeable from the console client
+                await Task.Delay(500);
             }
+        }
+
+        /// <summary>
+        /// A client-side streaming RPC where the client writes a sequence of messages and sends them to the server
+        /// </summary>
+        /// <param name="requestStream">Request stream</param>
+        /// <param name="context"></param>
+        /// <returns>Total elapsed time for the call in seconds</returns>
+        public override async Task<SendTextStreamResponse> SendTextStream(IAsyncStreamReader<SendTextStreamRequest> requestStream, ServerCallContext context)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            _lines = new string[] { };
+            while (await requestStream.MoveNext())
+            {
+                var currentRequest = requestStream.Current;
+                _lines.Append(currentRequest.Line);
+            }
+
+            return new SendTextStreamResponse { ElapsedTimeSec = (int)(stopwatch.ElapsedMilliseconds / 1000) };
         }
     }
 }
