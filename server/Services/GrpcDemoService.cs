@@ -44,7 +44,7 @@ namespace GrpcDemo.Server
         /// A server-side streaming RPC where the client sends a request to the server and gets a stream to read a sequence of messages back
         /// </summary>
         /// <param name="request">Empty params</param>
-        /// <param name="responseStream">Stream of messages</param>
+        /// <param name="responseStream">Stream that the client uses to receive messages from the server</param>
         /// <param name="context"></param>
         /// <returns>A response stream</returns>
         public override async Task GetTextStream(EmptyParams request,
@@ -63,7 +63,7 @@ namespace GrpcDemo.Server
         /// <summary>
         /// A client-side streaming RPC where the client writes a sequence of messages and sends them to the server
         /// </summary>
-        /// <param name="requestStream">Request stream</param>
+        /// <param name="requestStream">Stream that the client uses to write messages</param>
         /// <param name="context"></param>
         /// <returns>Total elapsed time for the call in seconds</returns>
         public override async Task<SendTextStreamResponse> SendTextStream(IAsyncStreamReader<SendTextStreamRequest> requestStream, ServerCallContext context)
@@ -79,6 +79,27 @@ namespace GrpcDemo.Server
             }
 
             return new SendTextStreamResponse { ElapsedTimeSec = (int)(stopwatch.ElapsedMilliseconds / 1000) };
+        }
+
+        /// <summary>
+        /// A bidirectional streaming RPC where both sides send a sequence of messages using a read-write stream. 
+        /// The two streams operate independently, so clients and servers can read and write in whatever order they like.
+        /// </summary>
+        /// <param name="requestStream">Stream that the client uses to write messages</param>
+        /// <param name="responseStream">Stream that the client uses to receive messages from the server</param>
+        /// <param name="context"></param>
+        /// <returns></returns>
+        public override async Task ReverseText(IAsyncStreamReader<ReverseTextRequest> requestStream, IServerStreamWriter<ReverseTextResponse> responseStream, ServerCallContext context)
+        {
+            while (await requestStream.MoveNext())
+            {
+                var currentRequest = requestStream.Current;
+                var reversedLine = new string(currentRequest.Line.Reverse().ToArray());
+                await responseStream.WriteAsync(new ReverseTextResponse { Line = reversedLine });
+                
+                // Delay so that the streaming response is clearly noticeable from the console client
+                await Task.Delay(1200);
+            }
         }
     }
 }

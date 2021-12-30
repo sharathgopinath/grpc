@@ -32,10 +32,14 @@ namespace Grpc.Client
                         await SendTextStream(client);
                         break;
 
+                    case 4:
+                        await ReverseText(client);
+                        break;
+
                     default: break;
                 };
                 selectedOption = DisplayOptions();
-            } while (selectedOption < 4);
+            } while (selectedOption < 5);
         }
 
         private static int DisplayOptions()
@@ -43,12 +47,42 @@ namespace Grpc.Client
             Console.WriteLine("\r\nSelect an option:");
             Console.WriteLine("1. SayHello");
             Console.WriteLine("2. GetTextStream");
-            Console.WriteLine("3. UpdateTextStream");
-            Console.WriteLine("4. Exit");
+            Console.WriteLine("3. SendTextStream");
+            Console.WriteLine("4. ReverseText");
+            Console.WriteLine("5. Exit");
 
             var selectedOption = Console.ReadKey().KeyChar;
             Console.WriteLine();
             return int.Parse(selectedOption.ToString());
+        }
+
+        private static async Task ReverseText(GrpcDemoClient client)
+        {
+            using var call = client.ReverseText();
+            var responseReaderTask = Task.Run(async () =>
+            {
+                while (await call.ResponseStream.MoveNext(CancellationToken.None))
+                {
+                    Console.WriteLine($"Server response: {call.ResponseStream.Current.ToString()}");
+                }
+            });
+
+            var lines = new string[] { 
+                "The first mouse gets the cheese",
+                "The second mouse gets the cheese",
+                "The third mouse gets the cheese",
+                "The fourth mouse gets the cheese" };
+
+            foreach (var line in lines)
+            {
+                await call.RequestStream.WriteAsync(new ReverseTextRequest { Line = line });
+                Console.WriteLine($"Sent: {line}");
+                
+                // Delay so that the streaming response is clearly noticeable
+                await Task.Delay(500);
+            }
+            await call.RequestStream.CompleteAsync();
+            await responseReaderTask;
         }
 
         private static async Task SendTextStream(GrpcDemoClient client)
@@ -71,7 +105,7 @@ namespace Grpc.Client
             }
             await call.RequestStream.CompleteAsync();
             var updateResponse = await call.ResponseAsync;
-            Console.WriteLine($"Update completed in {updateResponse.ElapsedTimeSec} seconds");
+            Console.WriteLine($"Server received in {updateResponse.ElapsedTimeSec} seconds");
         }
 
         private static async Task GetTextStream(GrpcDemoClient client)
