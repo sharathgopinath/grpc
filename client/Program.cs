@@ -7,6 +7,9 @@ using static GrpcDemo.Client.GrpcDemo;
 
 namespace Grpc.Client
 {
+    /// <summary>
+    /// Main program of the console app
+    /// </summary>
     class Program
     {
         static async Task Main(string[] args)
@@ -42,13 +45,17 @@ namespace Grpc.Client
             } while (selectedOption < 5);
         }
 
+        /// <summary>
+        /// Displays menu options
+        /// </summary>
+        /// <returns></returns>
         private static int DisplayOptions()
         {
             Console.WriteLine("\r\nSelect an option:");
-            Console.WriteLine("1. SayHello");
-            Console.WriteLine("2. GetTextStream");
-            Console.WriteLine("3. SendTextStream");
-            Console.WriteLine("4. ReverseText");
+            Console.WriteLine("1. SayHello (Unary RPC)");
+            Console.WriteLine("2. GetTextStream (Server streaming RPC)");
+            Console.WriteLine("3. SendTextStream (Client streaming RPC)");
+            Console.WriteLine("4. ReverseText (Bidirectional RPC)");
             Console.WriteLine("5. Exit");
 
             var selectedOption = Console.ReadKey().KeyChar;
@@ -56,8 +63,16 @@ namespace Grpc.Client
             return int.Parse(selectedOption.ToString());
         }
 
+        /// <summary>
+        /// Sends a stream of text and receives a stream of the same text but reversed by calling the server RPC endpoint
+        /// </summary>
+        /// <param name="client">The gRPC client</param>
+        /// <returns></returns>
         private static async Task ReverseText(GrpcDemoClient client)
         {
+            Console.WriteLine("--- Bidirectional RPC ---");
+            Console.WriteLine();
+
             using var call = client.ReverseText();
             var responseReaderTask = Task.Run(async () =>
             {
@@ -85,8 +100,16 @@ namespace Grpc.Client
             await responseReaderTask;
         }
 
+        /// <summary>
+        /// Sends a stream of text using the server RPC endpoint
+        /// </summary>
+        /// <param name="client">The gRPC client</param>
+        /// <returns></returns>
         private static async Task SendTextStream(GrpcDemoClient client)
         {
+            Console.WriteLine("--- Client streaming RPC ---");
+            Console.WriteLine();
+
             using var call = client.SendTextStream();
             var lines = new string[] {
                 "Hi there",
@@ -108,8 +131,16 @@ namespace Grpc.Client
             Console.WriteLine($"Server received in {updateResponse.ElapsedTimeSec} seconds");
         }
 
+        /// <summary>
+        /// Gets a stream of text by calling the server RPC endpoint
+        /// </summary>
+        /// <param name="client">The gRPC client</param>
+        /// <returns></returns>
         private static async Task GetTextStream(GrpcDemoClient client)
         {
+            Console.WriteLine("--- Server streaming RPC ---");
+            Console.WriteLine();
+
             using var call = client.GetTextStream(new EmptyParams());
             var responseStream = call.ResponseStream;
 
@@ -121,8 +152,16 @@ namespace Grpc.Client
             }
         }
 
+        /// <summary>
+        /// Calls the Unary RPC endpoint
+        /// </summary>
+        /// <param name="client">The gRPC client</param>
+        /// <returns></returns>
         private static async Task SayHello(GrpcDemoClient client)
         {
+            Console.WriteLine("--- Unary RPC ---");
+            Console.WriteLine();
+
             var reply = await client.SayHelloAsync(
                           new HelloRequest { Name = "GrpcClient" });
             Console.WriteLine("Greeting: " + reply.Message);
